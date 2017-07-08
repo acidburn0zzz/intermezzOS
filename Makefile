@@ -2,27 +2,30 @@ default: run
 
 .PHONY: clean
 
-build/multiboot_header.o:	multiboot_header.asm
-	mkdir -p build
-	nasm -f elf64 multiboot_header.asm -o build/multiboot_header.o
+target/multiboot_header.o:	src/asm/multiboot_header.asm
+	mkdir -p target
+	nasm -f elf64 src/asm/multiboot_header.asm -o target/multiboot_header.o
 
-build/boot.o: boot.asm
-	mkdir -p build
-	nasm -f elf64 boot.asm -o build/boot.o
+target/boot.o: src/asm/boot.asm
+	mkdir -p target
+	nasm -f elf64 src/asm/boot.asm -o target/boot.o
 
-build/kernel.bin: build/boot.o build/multiboot_header.o linker.ld
-	ld -n -o build/kernel.bin -T linker.ld build/multiboot_header.o build/boot.o
+target/kernel.bin: target/boot.o target/multiboot_header.o src/asm/linker.ld
+	ld -n -o target/kernel.bin -T src/asm/linker.ld target/multiboot_header.o target/boot.o target/x86_64-unknown-intermezzos-gnu/release/libintermezzos.a
 
-build/os.iso: build/kernel.bin grub.cfg
-	mkdir -p build/isofiles/boot/grub
-	cp grub.cfg build/isofiles/boot/grub
-	cp build/kernel.bin build/isofiles/boot
-	grub-mkrescue -o build/os.iso build/isofiles
+target/os.iso: target/kernel.bin src/asm/grub.cfg
+	mkdir -p target/isofiles/boot/grub
+	cp src/asm/grub.cfg target/isofiles/boot/grub
+	cp target/kernel.bin target/isofiles/boot
+	grub-mkrescue -o target/os.iso target/isofiles
 
-build: build/os.iso
+target: cargo target/os.iso
 
-run: build/os.iso
-	qemu-system-x86_64 -cdrom build/os.iso
+run: target
+	qemu-system-x86_64 -cdrom target/os.iso
 
 clean:
-	rm -rf build
+	cargo clean
+
+cargo:
+	xargo build --release --target x86_64-unknown-intermezzos-gnu

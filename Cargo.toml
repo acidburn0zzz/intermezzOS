@@ -3,4 +3,10 @@ name = "intermezzos"
 version = "0.1.0"
 authors = ["Syed Faraaz Ahmad <faraaz98@live.com>"]
 
+[lib]
+crate-type = ["staticlib"]
+
 [dependencies]
+
+[profile.release]
+panic = "abort"
